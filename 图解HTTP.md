@@ -157,6 +157,7 @@ URI 的完整例子：
 ### 2.8 状态保存技术 —— Cookie 
 发送请求（无cookie）——> 生成cookie，返回响应（携带cookie）——> 保存cookie，发送请求（携带cookie）
 
+---
 ## 3 HTTP 报文内的 HTTP 信息
 
 ### 3.1 HTTP报文
