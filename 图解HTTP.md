@@ -1,4 +1,5 @@
 # 图解 HTTP 笔记
+
 - [图解 HTTP 笔记](#%E5%9B%BE%E8%A7%A3-HTTP-%E7%AC%94%E8%AE%B0)
   - [1 网络基础 TCP/IP 协议族](#1-%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80-TCPIP-%E5%8D%8F%E8%AE%AE%E6%97%8F)
     - [1.1 TCP/IP 分层管理](#11-TCPIP-%E5%88%86%E5%B1%82%E7%AE%A1%E7%90%86)
@@ -33,7 +34,9 @@
   - [6 HTTP 首部](#6-HTTP-%E9%A6%96%E9%83%A8)
     - [6.1 通用首部字段](#61-%E9%80%9A%E7%94%A8%E9%A6%96%E9%83%A8%E5%AD%97%E6%AE%B5)
     - [6.2 请求首部字段](#62-%E8%AF%B7%E6%B1%82%E9%A6%96%E9%83%A8%E5%AD%97%E6%AE%B5)
+
 ---
+
 ## 1 网络基础 TCP/IP 协议族
 
 ### 1.1 TCP/IP 分层管理
@@ -73,6 +76,7 @@ arp 协议用于 mac 地址和 ip 地址的转换，mac 地址与网卡绑定，
 domain name system 域名解析系统，负责域名同 ip 地址之间的解析转换。
 
 ---
+
 ## 2 简单的 HTTP 协议
 
 ### URI 和 URL
@@ -81,11 +85,11 @@ URI（Uniform resource identifier，统一资源标识符）用于标记互联�
 
 URI 的完整例子：
 
-> http://username:pwd@www.example.com:80/root/dir/idx.html?uid=1#ch1
+> <http://username:pwd@www.example.com:80/root/dir/idx.html?uid=1#ch1>
 
 |项目|内容|
 |---:|:---|
-|协议名|http:| 
+|协议名|http:|
 |认证信息|username:pwd|
 |服务器地址|www.example.com|
 |端口号|80|
@@ -98,7 +102,8 @@ URI 的完整例子：
 ### 2.2 通过发出请求返回响应完成一次通信
 
 - 请求格式（不严谨）
-  ```
+
+  ``` text
   POST /from/entry HTTP/1.1
   Host: example.com
   Connection: keep-alive
@@ -111,8 +116,10 @@ URI 的完整例子：
   // (空行CR+LF)
   // 内容实体
   ```
+
 - 响应格式（不严谨）
-  ```
+  
+  ``` text
   HTTP/1.1 200 OK
   Date: Tue, 8 Feb 2019 12:25:15 UTC+8
   Content-Type: text/html
@@ -126,6 +133,7 @@ URI 的完整例子：
   // (空行CR+LF)
   // 内容实体
   ```
+
 ### 2.3 HTTP 是无状态的协议
 
 协议对于请求和响应都不会做持久化
@@ -133,16 +141,20 @@ URI 的完整例子：
 ### 2.4 **请求** URI 的设定
 
 - 请求首行方法之后指定域名或地址/路径  
-  ```
+  
+  ``` text
   GET http://www.example.com/path/index.htm HTTP/1.1
   ```
+
 - 在首部字段中指定 host 信息  
-  ```
+  
+  ``` text
   GET /path/index.htm HTTP/1.1
   Host: www.example.com
   ```
- 
+
 ### 2.5/2.6 HTTP 定义方法约定请求类型以告知服务器请求意图
+
 |method|intention|remark|
 |:---:|:---|---|
 |GET|获取资源||
@@ -168,10 +180,12 @@ URI 的完整例子：
   
 - 管线化操作，允许并行发送多个请求。
 
-### 2.8 状态保存技术 —— Cookie 
+### 2.8 状态保存技术 —— Cookie
+
 发送请求（无cookie）——> 生成cookie，返回响应（携带cookie）——> 保存cookie，发送请求（携带cookie）
 
 ---
+
 ## 3 HTTP 报文内的 HTTP 信息
 
 ### 3.1 HTTP报文
@@ -187,7 +201,7 @@ URI 的完整例子：
   - 实体首部
   - 其他
 - 空行（CR+LF）
-- 报文主体 
+- 报文主体
 
 ### 3.3 提高实体传输效率
 
@@ -196,15 +210,17 @@ URI 的完整例子：
 2. 分块  
    对实体经行分割，分块传输，客户端可以分块加载。十六进制标记块大小，最后一块使用 `0(CR+LF)` 标记。  
    针对分块传输有 Transfer Coding 机制指定编码方式。
-   
+
 ### 3.4 按传输实体对象类型多部分传输（响应）
 
 多用于图片文件等等数据上传服务中使用。  
 指定 `Content-Type` 字段：
+
 - multipart/form-data;boundary=xxxxxx
 - multipart/byteranges;boundary=xxxxxxx
 
 指定 `Content-Range` 字段：
+
 - bytes 100-300/800
 
 在多部分实体主体之间和收尾用 --boundary 来分割；各部分内部依然可以指定各自的实体首部字段。
@@ -219,11 +235,13 @@ URI 的完整例子：
 ### 3.6 协商传输内容
 
 用于客户端请求的的定制化，分为:
+
 - 客户端驱动（Agent-Driven Negotiation）
 - 服务端驱动（Server-Agent Negotiation）
 - 透明驱动（Transparent Negotiation）
 
 主要指定字符集、编码、语言等：
+
 - Accept
 - Accept-Encoding
 - Accept-Charset
@@ -231,6 +249,7 @@ URI 的完整例子：
 - Content-Language
 
 ---
+
 ## 4 HTTP状态码
 
 描述返回结果，RFC2616、4918、5842、6585
@@ -280,6 +299,7 @@ URI 的完整例子：
   服务器正在维护或者超负载无法处理请求，响应首部可添加 `Retry-After` 提醒重试
 
 ---
+
 ## 5 web 服务器
 
 ### 5.1 单个服务器多域名
@@ -292,11 +312,11 @@ URI 的完整例子：
    代理服务器接收到请求后会转发给源服务器或者下一接续代理服务器，**转发时**请求首部会增加 `Via` 字段标识代理路径(主机信息)。
 2. 网关  
    网关响应 HTTP 请求对于客户端来说是不感知网关之后的事情，这使得原服务器和网关之间的通信协议更加自由  
-   网关还可以增加安全性（？） 
+   网关还可以增加安全性（？）
 3. 隧道  
    隧道的建立使得请求可以加密发送到远端服务器
 
-### 5.3 缓存机制 
+### 5.3 缓存机制
 
 - 代理服务器的缓存
 - 客户端缓存
@@ -304,6 +324,7 @@ URI 的完整例子：
 均需要注意缓存期限，怀疑超过期限则要向原服务器确认。
 
 ---
+
 ## 6 HTTP 首部
 
 ### 6.1 通用首部字段
@@ -321,3 +342,7 @@ URI 的完整例子：
 
 ### 6.2 请求首部字段
 
+|字段名|说明|补充|
+|---|:---|:---|
+|Accept|表明可以处理的响应类型|文本，图片，视频，二进制。可指定优先级，p=0-1，进度为三位小数，用 `;` 跟在响应内容的类型之后|
+|Accept-Charset|可以处理的字符集||
