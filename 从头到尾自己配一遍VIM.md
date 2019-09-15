@@ -29,9 +29,12 @@ Huge version without GUI.  Features included (+) or not (-):
 ``` vimrc
 set shiftwidth=4     " 一个缩进的宽度 'sw'
 set autoindent       " 自动缩进 'ai'
+set smartindent      " 智能缩进 'si'
 set expandtab        " 使用空格展开 tab 键 'et'
 set softtabstop=4    " tab 键被展开的宽度 'sts'
 ```
+
+`softtabstop` 和 `tapstop` 的区别在于前者是在编辑模式下对于 **tab** 键的空格替换数目的计算，后者则是在其他模式下的空格数目的计算。由于默认的 `tapstop` 是 8 ，所以由别的主体维护的文件采用的可能是默认的 `tapstop` 配置，更改之后通过 vim 查看时，有可能会有显示上的错误。
 
 ### 1.2 行列显示
 
@@ -39,6 +42,19 @@ set softtabstop=4    " tab 键被展开的宽度 'sts'
 set number            " 设置行号 'nu'
 set cursorline        " 设置所在行高亮 'cul'
 set colorcolumn=81    " 设置高亮 81 列 'cc'
+highlight ColorColumn ctermbg=black  ctermfg=white
+```
+
+### 1.3 其他
+
+``` vimrc
+set nocompatible                  " 不兼容 vi 'nocp'
+set backspace=indent,eol,start    " 插入模式下退格键的作用于缩进、行尾
+set hlsearch                      " 高亮搜索 'hls'
+set ignorecase                    " 搜索时忽略大小写 'ic'
+set incsearch                     " 搜索模式实时匹配 'is'
+syntax on
+filetype plugin on
 ```
 
 ## 2 插件
@@ -114,7 +130,119 @@ let g:NERDTreeIndicatorMapCustom = {
 "let g:NERDTreeShowIgnoredStatus=1    " show ignored status
 ```
 
+#### 2.2.2 文件搜索 ctrlpvim
+
+``` vimrc
+call plug#begin('~/.vim/plugged')
+
+Plug 'ctrlpvim/ctrlp.vim'
+" Plug 'Yggdroot/LeaderF' " 依赖 python, 速度快
+
+call plug#end()
+```
+
+- ctrl + p 搜索文件
+- ctrl + k/j 选择文件
+- ctrl + x/v 水平或者垂直分屏打开文件
+
+#### 2.2.3 tagbar 文件大纲
+
+``` vimrc
+call plug#begin('~/.vim/plugged')
+
+Plug 'majutsushi/tagbar'
+
+call plug#end()
+
+map <F9> :TagbarToggle︎︎︎︎<CR>
+```
+
+需要 ctags 支持
+
+#### 2.2.4 状态栏增强
+
+``` vimrc
+call plug#begin('~/.vim/plugged')
+
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+
+call plug#end()
+
+let g:airline_theme='base16_tomorrow' " 设置主题
+```
+
+#### 2.2.5 golang
+
+``` vimrc
+call plug#begin('~/.vim/plugged')
+
+Plug 'fatih/vim-go' ",︎︎ { 'do': ':GoUpdateBinaries' }
+Plug 'mdempsky/gocode'︎︎, { 'rtp': 'vim', 'do': '~/.vim/plugged/gocode/vim/symlink.sh' }
+
+call plug#end()
+
+let g:tagbar_type_go={
+    \ 'ctagstype' : 'go',
+    \ 'kinds'     : [
+        \ 'p:package',
+        \ 'i:imports:1',
+        \ 'c:constants',
+        \ 'v:variables',
+        \ 't:types',
+        \ 'n:interfaces',
+        \ 'w:fields',
+        \ 'e:embedded',
+        \ 'm:methods',
+        \ 'r:constructor',
+        \ 'f:functions'
+    \ ],
+    \ 'sro' : '.',
+    \ 'kind2scope' : {
+        \ 't' : 'ctype',
+        \ 'n' : 'ntype'
+    \ },
+    \ 'scope2kind' : {
+        \ 'ctype' : 't',
+        \ 'ntype' : 'n'
+    \ },
+    \ 'ctagsbin'  : 'gotags',
+    \ 'ctagsargs' : '-sort -silent'
+\ }
+
+let g:go_fmt_command="goimports" " 格式化将默认的 gofmt 替换
+let g:go_autodetect_gopath=1
+let g:go_list_type="quickfix"
+
+let g:go_version_warning=1
+let g:go_highlight_types=1
+let g:go_highlight_fields=1
+let g:go_highlight_functions=1
+let g:go_highlight_function_calls=1
+let g:go_highlight_operators=1
+let g:go_highlight_extra_types=1
+let g:go_highlight_methods=1
+let g:go_highlight_generate_tags=1
+
+let g:go_auto_type_info=1
+
+imap <F2> <C-x><C-o>
+```
+
 ## 3 参考
 
+### common
+
 - [Vim documentation: options](http://vimdoc.sourceforge.net/htmldoc/options.html)
+- [filetype](http://vimdoc.sourceforge.net/htmldoc/filetype.html)
+- [syntax](http://vimdoc.sourceforge.net/htmldoc/syntax.html)
 - [上古神器vim插件：你真的学会用NERDTree了吗？](https://www.jianshu.com/p/3066b3191cb1)
+- [ctrlp](https://github.com/ctrlpvim/ctrlp.vim)
+- [tagbar](https://github.com/majutsushi/tagbar)
+- [airline](https://github.com/vim-airline/vim-airline)
+
+### golang
+
+- [vim-go](https://github.com/fatih/vim-go)
+- [gocode](https://github.com/mdempsky/gocode)
+- [gotags](https://github.com/jstemmer/gotags)
