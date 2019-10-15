@@ -341,21 +341,53 @@ type Handler interface {
 }
 ```
 
-一个 `zero value` server 的例子
+一个接近 `zero value` server 的例子
 
 ``` golang
 
-func sayhello(w http.ResponseWriter, r *http.Request) {
-    fmt.Fprint(w,"hello")
+func sayhello(w http.ResponseWriter, r *http.Request){
+    fmt.Fprint(w, "hello, now:", time.Now().String())
 }
 
+func main() {
+    s := &http.Server{
+        Addr: "127.0.0.1:8080",
+    }
+    http.HandleFunc("/hello",sayhello)
+    s.ListenAndServe()
+}
+// output:
+// $ curl 127.0.0.1:8080/hello
+// hello, now:2019-10-15 19:48:50.4402375 +0800 CST m=+0.238175401
 ```
 
-supports
+上例中 `http.Server` 只是定义监听的地址，没有定义 `Handler` 依然能够提供服务是因为采用默认的缺省 `Handler`。几经跳转后：
+
+``` golang
+// serverHandler delegates to either the server's Handler or
+// DefaultServeMux and also handles "OPTIONS *" requests.
+type serverHandler struct {
+    srv *Server
+}
+
+func (sh serverHandler) ServeHTTP(rw ResponseWriter, req *Request) {
+    handler := sh.srv.Handler
+    if handler == nil {
+        handler = DefaultServeMux
+    }
+    if req.RequestURI == "*" && req.Method == "OPTIONS" {
+        handler = globalOptionsHandler{}
+    }
+    handler.ServeHTTP(rw, req)
+}
+```
+
+`http.HandleFunc` 则是向默认的缺省 `Handler` 注册路由函数，从下面的 golang 源码可以看出，自定义的 `sayhello` 函数被转型成 `HandleFunc` 后，作为 `Handler` 的接口实现作为了 `*ServerMux.Handle` 的入参。 `HandleFunc` 对于接口 `Handler` 的实现方式和前文中 `operatorFunc` 对于接口 `operator` 的实现如出一辙。
 
 ``` golang
 // HandleFunc registers the handler function for the given pattern
 // in the DefaultServeMux.
+// The documentation for ServeMux explains how patterns are matched.
 func HandleFunc(pattern string, handler func(ResponseWriter, *Request)) {
     DefaultServeMux.HandleFunc(pattern, handler)
 }
@@ -368,6 +400,12 @@ func (mux *ServeMux) HandleFunc(pattern string, handler func(ResponseWriter, *Re
     mux.Handle(pattern, HandlerFunc(handler))
 }
 
+// Handle registers the handler for the given pattern.
+// If a handler already exists for pattern, Handle panics.
+func (mux *ServeMux) Handle(pattern string, handler Handler) {
+    // ...
+}
+
 // The HandlerFunc type is an adapter to allow the use of
 // ordinary functions as HTTP handlers. If f is a function
 // with the appropriate signature, HandlerFunc(f) is a
@@ -378,14 +416,55 @@ type HandlerFunc func(ResponseWriter, *Request)
 func (f HandlerFunc) ServeHTTP(w ResponseWriter, r *Request) {
     f(w, r)
 }
+
 ```
 
-### 闭包
+## 闭包
 
-#### 技术
+前面絮絮叨叨的铺垫了很多，尤其在 golang 函数的高级特性上的解释对于介绍 golang 的闭包打下了坚实的基础。首先看一个 golang 官方的的闭包案例：
 
-#### 保存了环境和功能
+``` golang
+package main
 
-#### 自由变量，值关联和引用关联
+import "fmt"
 
-#### 被捕获
+// fib returns a function that returns
+// successive Fibonacci numbers.
+func fib() func() int {
+    a, b := 0, 1
+    return func() int {
+        a, b = b, a+b
+        return a
+    }
+}
+
+func main() {
+    f := fib()
+    // Function calls are evaluated left-to-right.
+    fmt.Println(f(), f(), f(), f(), f())
+}
+// output:
+// 1 1 2 3 5
+```
+
+函数 `fib` 内部定义了 `a, b` 两个变量，由于作为其返回值匿名函数和这两个变量处于同一个代码块中，所以可以使用变量 `a, b` 进行运算。更加“过分”的是，在 `main` 函数中，作为返回值的匿名函数赋值给变量 `f` 后携带着 `a, b` 的信息跳出了 `fib` 的作用域，随着不断的调用 `f`，逐个打印斐波那契数。
+
+那么闭包准确定义是什么？那么这段代码是如何实现的闭包？
+
+维基的定义：
+
+> In programming languages, a closure, also lexical closure or function closure, is a technique for implementing lexically scoped name binding in a language with first-class functions. Operationally, a closure is a record storing a function together with an environment. The environment is a mapping associating each free variable of the function (variables that are used locally, but defined in an enclosing scope) with the value or reference to which the name was bound when the closure was created. Unlike a plain function, a closure allows the function to access those captured variables through the closure's copies of their values or references, even when the function is invoked outside their scope.
+
+### 技术
+
+> In programming languages, a closure, also lexical closure or function closure, is a technique for implementing lexically scoped name binding in a language with first-class functions.
+
+闭包是在类似 golang 这样**将函数作为一等公民的编程语言**中的一种**技术**，这种技术与静态作用域（Lexical scoping，词法作用域）以及命名绑定（name binding）有关，它实现了 lexically scoped name binding。（无力解释了）
+
+一般来讲，通过声明变量的方式实现了数据实体（entities， data or codes）和标识符（identifiers）的绑定，对于数据的访问和操作可以通过与其绑定的标识符来进行。然而，这个标识符号
+
+### 保存了环境和功能
+
+### 自由变量，值关联和引用关联
+
+### 被捕获

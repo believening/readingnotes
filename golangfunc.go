@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"net/http"
 	"reflect"
 	"sort"
 	"sync"
@@ -102,6 +103,35 @@ func operateC(a, b int, o operator) int {
 	return o.operate(a, b)
 }
 
+// http
+func sayhello(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(w, "hello, now:", time.Now().String())
+}
+
+// closure
+func fib() func() int {
+	a, b := 0, 1
+	return func() int {
+		a, b = b, a+b
+		return a
+	}
+}
+
+func autoIncrement() func() (int, int) {
+	a, sum := 0, 0
+	return func() (int, int) {
+		a, sum = a+1, a+sum
+		return a, sum
+	}
+}
+
+func timeCost() func() string {
+	start := time.Now()
+	return func() string {
+		return time.Now().Sub(start).String()
+	}
+}
+
 func main() {
 	{
 		a, b := 1, 2
@@ -196,7 +226,25 @@ func main() {
 	}
 
 	{
+		s := &http.Server{
+			Addr: "127.0.0.1:8080",
+		}
+		http.HandleFunc("/hello", sayhello)
+		s.ListenAndServe()
+	}
 
+	{
+		f := fib()
+		fmt.Println(f(), f(), f(), f(), f())
+	}
+
+	{
+		tc := timeCost()
+		fmt.Println(tc())
+		time.Sleep(time.Second)
+		fmt.Println(tc())
+		time.Sleep(time.Second)
+		fmt.Println(tc())
 	}
 }
 
