@@ -455,16 +455,101 @@ func main() {
 
 > In programming languages, a closure, also lexical closure or function closure, is a technique for implementing lexically scoped name binding in a language with first-class functions. Operationally, a closure is a record storing a function together with an environment. The environment is a mapping associating each free variable of the function (variables that are used locally, but defined in an enclosing scope) with the value or reference to which the name was bound when the closure was created. Unlike a plain function, a closure allows the function to access those captured variables through the closure's copies of their values or references, even when the function is invoked outside their scope.
 
-### 技术
+### 一种技术
 
 > In programming languages, a closure, also lexical closure or function closure, is a technique for implementing lexically scoped name binding in a language with first-class functions.
 
 闭包是在类似 golang 这样**将函数作为一等公民的编程语言**中的一种**技术**，这种技术与静态作用域（Lexical scoping，词法作用域）以及命名绑定（name binding）有关，它实现了 lexically scoped name binding。（无力解释了）
 
-一般来讲，通过声明变量的方式实现了数据实体（entities， data or codes）和标识符（identifiers）的绑定，对于数据的访问和操作可以通过与其绑定的标识符来进行。然而，这个标识符号
+一般来讲，通过声明变量的方式实现了数据实体（entities， data or codes）和标识符（identifiers）的绑定，对于数据的访问和操作可以通过与其绑定的标识符来进行。然而，这个标识符号在静态作用域编程语言中有自己的影响范围，一般在作用域之外不会维系绑定关系。
+
+``` golang
+func main(){
+    var out int = 10
+    var in1 int = 11
+    var in2 int = 11
+    for i := 0; i < out; i++ {
+        var in1 int
+        fmt.Print(in1,", ")
+        in1 = i
+        in2 = i
+        fmt.Println(in1,  in2)
+    }
+    fmt.Println(in1,  in2)
+}
+// output:
+// 0, 0 0
+// 0, 1 1
+// 0, 2 2
+// 0, 3 3
+// 0, 4 4
+// 0, 5 5
+// 0, 6 6
+// 0, 7 7
+// 0, 8 8
+// 0, 9 9
+// 11 9
+```
+
+上例子中，变量 `in1` 的绑定关系分别在 `main` 函数和 `for` 循环之内申明，`in1` 的值在各自范围内独立，在 `for` 内部，会屏蔽外部的 `in1`。 而 `in2` 则同外层共用一个了，外层的作用域覆盖到内层的。但是倘若执行如下的代码就会发生错误，内层标识符外层不能够使用：
+
+``` golang
+func main()  {
+    {
+        inner := "in"
+        fmt.Println(inner)
+    }
+    fmt.Println(inner)
+}
+// output:
+// undefined: inner
+```
+
+闭包并不会打破静态作用域，但是能在某种程度上突破静态作用域的限制，下面做一个不安全的例子：
+
+``` golang
+func doNotUseActually(stopch <-chan int) func() int {
+    a, b := 0, 1
+    go func(stop <-chan int) {
+        for {
+            select {
+            case <-stop: // unsafe
+                return
+            default:
+                a, b = b, a+b // unsafe
+            }
+            time.Sleep(time.Second)
+        }
+    }(stopch)
+    return func() int {
+        return a
+    }
+}
+
+func main()  {
+    stop := make(chan int, 1)
+    f := doNotUseActually(stop)
+    fmt.Println(f())
+    time.Sleep(5 * time.Second)
+    fmt.Println(f())
+    stop <- 1
+    close(stop)
+}
+// output:
+// 0
+// 5
+```
+
+在上例中，主线程变相地访问到了 `doNotUseActually` 中定义的变量 `a`
 
 ### 保存了环境和功能
 
+> Operationally, a closure is a record storing a function together with an environment.
+
 ### 自由变量，值关联和引用关联
 
+> The environment is a mapping associating each free variable of the function (variables that are used locally, but defined in an enclosing scope) with the value or reference to which the name was bound when the closure was created.
+
 ### 被捕获
+
+> Unlike a plain function, a closure allows the function to access those captured variables through the closure's copies of their values or references, even when the function is invoked outside their scope.

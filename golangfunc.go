@@ -132,6 +132,24 @@ func timeCost() func() string {
 	}
 }
 
+func doNotUseActually(stopch <-chan int) func() int {
+	a, b := 0, 1
+	go func(stop <-chan int) {
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				a, b = b, a+b
+			}
+			time.Sleep(time.Second)
+		}
+	}(stopch)
+	return func() int {
+		return a
+	}
+}
+
 func main() {
 	{
 		a, b := 1, 2
@@ -226,11 +244,11 @@ func main() {
 	}
 
 	{
-		s := &http.Server{
-			Addr: "127.0.0.1:8080",
-		}
-		http.HandleFunc("/hello", sayhello)
-		s.ListenAndServe()
+		// s := &http.Server{
+		// 	Addr: "127.0.0.1:8080",
+		// }
+		// http.HandleFunc("/hello", sayhello)
+		// s.ListenAndServe()
 	}
 
 	{
@@ -245,6 +263,38 @@ func main() {
 		fmt.Println(tc())
 		time.Sleep(time.Second)
 		fmt.Println(tc())
+	}
+
+	{
+		var out int = 10
+		var in1 int = 11
+		var in2 int = 11
+		for i := 0; i < out; i++ {
+			var in1 int
+			fmt.Print(in1, ", ")
+			in1 = i
+			in2 = i
+			fmt.Println(in1, in2)
+		}
+		fmt.Println(in1, in2)
+	}
+
+	{
+		// {
+		// 	inner := "in"
+		// 	fmt.Println(inner)
+		// }
+		// fmt.Println(inner)
+	}
+
+	{
+		stop := make(chan int, 1)
+		f := doNotUseActually(stop)
+		fmt.Println(f())
+		time.Sleep(5 * time.Second)
+		fmt.Println(f())
+		stop <- 1
+		close(stop)
 	}
 }
 
