@@ -1,0 +1,108 @@
+package main
+
+import (
+	"log"
+	"sync/atomic"
+	"syscall"
+	"unsafe"
+
+	"golang.org/x/sys/unix"
+)
+
+const (
+	MaxBufferSize = 2048
+
+	CN_IDX_PROC = 0x1
+	CN_VAL_PROC = 0x1
+)
+
+var nextSeqNr uint32
+
+type socket struct {
+	sd int32
+}
+
+func (s *socket) Close() {
+	fd := int(atomic.SwapInt32(&s.sd, -1))
+	unix.Close(fd)
+}
+
+func (s *socket) Fd() int {
+	return int(s.sd)
+}
+
+func getSocket() (*socket, error) {
+	sd, err := syscall.Socket(syscall.AF_NETLINK, syscall.SOCK_DGRAM, syscall.NETLINK_CONNECTOR)
+	if err != nil {
+		return nil, err
+	}
+	return &socket{
+		sd: int32(sd),
+	}, nil
+}
+
+func initNladdr() (sa, da *syscall.SockaddrNetlink) {
+	sa = &syscall.SockaddrNetlink{
+		Family: syscall.AF_NETLINK,
+		Groups: CN_IDX_PROC,
+		Pid:    uint32(syscall.Getpid()),
+	}
+	da = &syscall.SockaddrNetlink{
+		Family: syscall.AF_NETLINK,
+	}
+	return
+}
+
+type nlMsgHdr struct {
+	len uint32
+	typ uint16
+	flg uint16
+	seq uint32
+	pid uint32
+}
+
+const nlMsgHdrSize = 0x10
+
+func (h *nlMsgHdr) Marshal() []byte {
+	b := make([]byte, nlMsgHdrSize)
+	hdr := (*(*[nlMsgHdrSize]byte)(unsafe.Pointer(h)))[:]
+	copy(b[0:nlMsgHdrSize], hdr)
+	return b
+}
+
+func getSendMsg() []byte {
+	h := &nlMsgHdr{
+		len: nlMsgHdrSize,
+		typ: syscall.NLMSG_DONE,
+		pid: uint32(syscall.Getpid()),
+	}
+	b := make([]byte, syscall.SizeofNlMsghdr+syscall.NLMSG_ALIGNTO)
+	copy(b, h.Marshal())
+	return b
+}
+
+func main() {
+	// get scoket
+	sd, err := getSocket()
+	if err != nil {
+		log.Fatal("socket: ", err)
+	}
+	defer sd.Close()
+
+	// init source and dest nelink addr
+	sa, da := initNladdr()
+
+	// bind
+	if err = syscall.Bind(sd.Fd(), sa); err != nil {
+		log.Fatal("bind: ", err)
+	}
+
+	// send
+	if _, err = syscall.SendmsgN(sd.Fd(), getSendMsg(), nil, da, 0); err != nil {
+		log.Fatal("sendto: ", err)
+	}
+
+	for {
+		syscall.Recvmsg(sd.Fd(), nil, nil, 0)
+	}
+}
