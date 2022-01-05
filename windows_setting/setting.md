@@ -94,4 +94,6 @@
 ### 4.4 linux 常用小组件
 
 * [gocloc](https://github.com/hhatto/gocloc) `go install github.com/hhatto/gocloc/cmd/gocloc@latest`
-* [ag: the_sileer_searcher](https://github.com/ggreer/the_silver_searcher)
+* @Deprecated [ag: the_sileer_searcher](https://github.com/ggreer/the_silver_searcher)
+* rg [rg:ripgrep](https://github.com/BurntSushi/ripgrep)
+* [graph-easy ascii 画图](https://github.com/ironcamel/Graph-Easy)
