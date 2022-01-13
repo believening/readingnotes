@@ -26,6 +26,11 @@ set shiftwidth=4
 set tabstop=4
 
 """"""""""""""""""""""""""""""""""""""""
+" HYBRID LINE NUMBERS
+""""""""""""""""""""""""""""""""""""""""
+set nu rnu
+
+""""""""""""""""""""""""""""""""""""""""
 " SEARCH
 """"""""""""""""""""""""""""""""""""""""
 " Map <Space> to / (search) and Ctrl-<Space> to ? (backwards search)
@@ -36,7 +41,7 @@ map <C-space> ?
 " STATUS LINE
 """"""""""""""""""""""""""""""""""""""""
 " Format the status line
-set statusline=\ %{HasPaste()}%F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l\ \ Column:\ %c
+set statusline=\ %F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l\ \ Column:\ %c
 
 """"""""""""""""""""""""""""""""""""""""
 " MOVE BETWEEN WINDOWS
