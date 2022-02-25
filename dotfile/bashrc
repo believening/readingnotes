@@ -1,0 +1,2 @@
+# go mod Mapping pseudo-versions to commits
+alias gvmc="git log --pretty='%Cred%ad-%h%Creset -%C(auto)%d%Creset %s %C(bold blue)<%an>%Creset' --date=format:%Y%m%d%H%M%S --abbrev=12"
