@@ -1,0 +1,39 @@
+kube_go_header_text=istio.io/istio-client-go/header.go.txt
+
+
+kube_istio_source_package=istio.io/api
+kube_istio_source_packages=${kube_istio_source_package}/extensions/v1alpha1,${kube_istio_source_package}/networking/v1alpha3,${kube_istio_source_package}/networking/v1beta1,${kube_istio_source_package}/security/v1beta1,${kube_istio_source_package}/telemetry/v1alpha1
+
+kube_base_output_package=istio.io/client-go/pkg
+kube_api_packages=${kube_base_output_package}/apis/extensions/v1alpha1,${kube_base_output_package}/apis/networking/v1alpha3,${kube_base_output_package}/apis/networking/v1beta1,${kube_base_output_package}/apis/security/v1beta1,${kube_base_output_package}/apis/telemetry/v1alpha1
+
+1. 编辑 proto，添加代码生成相关的注释（拷贝既可）
+
+2. 重新生成，api 对象
+
+	make clean gen
+	make proto-commit
+
+3. 生成对应的 k8s runtime.Object
+
+	在 istio.io/api 根目录下
+	kubetype-gen --input-dirs ${kube_istio_source_packages} --output-package ${kube_base_output_package}/apis -h ${kube_go_header_text}
+
+	将生成的代码移动到  istio.io/clent-go 对应目录下，并切换到 istio.io/clent-go 根目录
+	deepcopy-gen --input-dirs ${kube_api_packages} -O zz_generated.deepcopy -h header.go.txt
+
+4. 生成对应的 client，lister，informer
+
+	client-gen --clientset-name versioned --input-base "" --input ${kube_api_packages} --output-package ${kube_base_output_package}/clientset -h header.go.txt
+	lister-gen --input-dirs ${kube_api_packages} --output-package ${kube_base_output_package}/listers -h header.go.txt
+	informer-gen --input-dirs ${kube_api_packages} --versioned-clientset-package ${kube_base_output_package}/clientset/versioned --listers-package ${kube_base_output_package}/listers --output-package ${kube_base_output_package}/informers -h header.go.txt
+
+5. 重命名
+	find ./pkg -name '*.go' -and -not -name 'doc.go' -and -not -name '*.gen.go' -type f -exec sh -c 'mv "$1" "${1%.go}".gen.go' - '{}' \;
+	
+6. 生成 istio 代码
+
+编辑 pkg/config/schema/metadata.yaml 和 pilot/pkg/config/kube/crdclient/gen/main.go 添加 crd
+
+ make gen-go
+ go generate ./pilot/pkg/config/kube/crdclient/...
