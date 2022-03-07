@@ -41,7 +41,8 @@ map <C-space> ?
 " STATUS LINE
 """"""""""""""""""""""""""""""""""""""""
 " Format the status line
-set statusline=\ %F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l\ \ Column:\ %c
+"set statusline=\ %F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l\ \ Column:\ %c
+set statusline=\ %F%m%r%h\ %w\ \ \ \ Line:\ %l\ \ Column:\ %c
 
 """"""""""""""""""""""""""""""""""""""""
 " MOVE BETWEEN WINDOWS
@@ -61,7 +62,7 @@ map <C-l> <C-W>l
 set background=dark    " Setting dark mode
 autocmd vimenter * ++nested colorscheme gruvbox
 
-" set nerd tree 
+" set nerd tree
 " upstream: https://github.com/preservim/nerdtree
 " install: git clone https://github.com/preservim/nerdtree.git ~/.vim/pack/vendor/start/nerdtree
 let NERDTreeShowHidden=0
@@ -77,4 +78,17 @@ nmap <silent> gd <Plug>(coc-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
-nmap <leader>rn <Plug>(coc-rename)           " Symbol renaming.
+nmap <leader>rn <Plug>(coc-rename)
+
+" ack.vim
+" upstream: https://github.com/mileszs/ack.vim
+if executable('rg')
+  let g:ackprg = 'rg --vimgrep --smart-case'
+endif
+
+cnoreabbrev Ack Ack!
+nnoremap <Leader>g :Ack!<Space>
+"let g:ack_autoclose = 1
+let g:ack_mappings = {
+      \  'v':  '<C-W><CR><C-W>L<C-W>p<C-W>J<C-W>p',
+      \ 'gv': '<C-W><CR><C-W>L<C-W>p<C-W>J' }
