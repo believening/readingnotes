@@ -1,0 +1,13 @@
+1. istioctl 本地查看执行 inject 后渲染出的 pod 结果
+
+``` shell
+kubectl -n istio-system get cm istio-{rev} -o=jsonpath='{.data.mesh}' > mesh.yaml
+
+kubectl -n istio-system get cm istio-sidecar-injector-{rev} -o=jsonpath='{.data.config}' > inject.yaml
+
+# maybe need convert from json, kubectl -n istio-system get cm istio-sidecar-injector-{rev} -o=jsonpath='{.data.values}' | yq -P '.'
+# istioctl kube-inject also accept json input
+kubectl -n istio-system get cm istio-sidecar-injector-{rev} -o=jsonpath='{.data.values}' |  > values.yaml
+
+istioctl kube-inject --injectConfigFile inject.yaml --meshConfigFile mesh.yaml --valuesFile valuse.yaml -f pod.yaml
+```
