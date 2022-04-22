@@ -97,3 +97,4 @@
 * @Deprecated [ag: the_sileer_searcher](https://github.com/ggreer/the_silver_searcher)
 * rg [rg:ripgrep](https://github.com/BurntSushi/ripgrep)
 * [graph-easy ascii 画图](https://github.com/ironcamel/Graph-Easy)
+* [json terminal tool: fx](https://github.com/antonmedv/fx)
