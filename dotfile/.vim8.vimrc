@@ -1,8 +1,7 @@
 " for vim8
 " ref: https://github.com/amix/vimrc
 
-" map leader to ',', 
-" if not set, <leader> means '\'
+" map leader to ',', if not set, <leader> means '\'
 let mapleader = ","
 
 " wildmenu command-line completion operates in an enhanced mode
@@ -40,9 +39,13 @@ map <C-space> ?
 """"""""""""""""""""""""""""""""""""""""
 " STATUS LINE
 """"""""""""""""""""""""""""""""""""""""
+set laststatus=2
 " Format the status line
 "set statusline=\ %F%m%r%h\ %w\ \ CWD:\ %r%{getcwd()}%h\ \ \ Line:\ %l\ \ Column:\ %c
-set statusline=\ %F%m%r%h\ %w\ \ \ \ Line:\ %l\ \ Column:\ %c
+set statusline=
+set statusline+=%{FugitiveStatusline()}
+set statusline+=%f%m%r%h%w
+set statusline+=%=\ Line:\ %l\ \ Column:\ %c
 
 """"""""""""""""""""""""""""""""""""""""
 " MOVE BETWEEN WINDOWS
@@ -92,3 +95,7 @@ nnoremap <Leader>g :Ack!<Space>
 let g:ack_mappings = {
       \  'v':  '<C-W><CR><C-W>L<C-W>p<C-W>J<C-W>p',
       \ 'gv': '<C-W><CR><C-W>L<C-W>p<C-W>J' }
+
+" fzf, fzf.vim
+" upstream: https://github.com/junegunn/fzf, https://github.com/junegunn/fzf.vim
+map <leader>f :FZF<cr>
