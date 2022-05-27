@@ -17,6 +17,11 @@ syntax enable
 
 " set utf8 as standard encoding and en_US as the standard language
 set encoding=utf8
+if has("autocmd")
+  " If the filetype is Makefile then we need to use tabs
+  " So do not expand tabs into space.
+  autocmd FileType make   set noexpandtab
+endif
 
 " Use spaces instead of tabs
 set expandtab
@@ -82,6 +87,8 @@ nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <leader>rn <Plug>(coc-rename)
+" Add `:Format` command to format current buffer.
+command! -nargs=0 Format :call CocActionAsync('format')
 
 " ack.vim
 " upstream: https://github.com/mileszs/ack.vim
