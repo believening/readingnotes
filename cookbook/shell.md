@@ -53,3 +53,14 @@
       start_agent;
    fi
    ```
+
+## k8s
+
+1. patch status
+
+   ``` shell
+   # json patch
+   curl --cert cert --key key -k  -XPATCH  -H "Content-Type: application/json-patch+json" -H "Accept: application/json" --data '[{"op": "add", "path": "/status", "value": {"status":{...}}}]' 'https://{apiserver}:6443/apis/{group}/{version}/namespaces/{ns}/{resources}/{name}/status'
+   # merge-patch
+   curl --cert cert --key key -k  -XPATCH  -H "Content-Type: application/merge-patch+json" -H "Accept: application/json" --data '{"status":{...}}' 'https://{apiserver}:6443/apis/{group}/{version}/namespaces/{ns}/{resources}/{name}/status'
+   ```
