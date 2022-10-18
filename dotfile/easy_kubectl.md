@@ -27,7 +27,7 @@ elif [[ -n "${ZSH_VERSION}" ]]; then
   if ! type _kubectl 1>/dev/null 2>&1; then
     source <(kubectl completion zsh)
   fi
-  source <(kubectl completion zsh | sed 's/\bkubectl\b/k/g' | sed 's/_kubectl/_k_kubectl/g')
+  source <(kubectl completion zsh | sed '/\s\b_kubectl\b\s/s/\bkubectl\b/k/g' | sed 's/_kubectl/_k_kubectl/g' | sed '/requestComp=/s/${words\[1\]}/kubectl/g' )
 fi
 
 k() {
@@ -37,16 +37,19 @@ k() {
   elif [[ $# -eq 0 ]]; then
     kubens
   else
-    kubectl $@ 
+    kubectl $@
   fi
 }
+
 ```
 
 3. 可通过镜像安装集成包
    
    ``` shell
-   mkdir -p ${HOME}/easy_kube && docker run --rm -v ${HOME}/easy_kube:/host/easy_kube believening/easy_kube:v0.1.5 tar -zxf easy_kube.tar.gz -C /host/easy_kube/
+   mkdir -p ${HOME}/easy_kube && docker run --rm -v ${HOME}/easy_kube:/host/easy_kube believening/easy_kube:v0.1.6 cp easy_kube.tar.gz /host/easy_kube/
    pushd $HOME/easy_kube
+   sudo chown $UID:$GID easy_kube.tar.gz
+   tar -zxf easy_kube.tar.gz
    source init.sh
    popd
    rm -rf $HOME/easy_kube
@@ -54,23 +57,24 @@ k() {
 
 4. dockerfile
 
-   ``` Dockerfile
-   FROM golang:alpine AS dependency
-   
-   ENV CGO_ENABLED=0
-   ENV LDFLAGS='-extldflags -static -s -w'
-   RUN go install -ldflags "${LDFLAGS}" github.com/ahmetb/kubectx/cmd/kubens@v0.9.4 && \
-       go install -ldflags "${LDFLAGS}" github.com/ahmetb/kubectx/cmd/kubectx@v0.9.4 && \
-       go install -ldflags "${LDFLAGS}" github.com/junegunn/fzf@0.34.0
-   
-   FROM busybox AS tar
- 
-   COPY --from=dependency /go/bin /easy_kube/bin
-   ADD easy_k /easy_kube/easy_k
-   ADD init.sh /easy_kube/init.sh
-   RUN tar -zcf /easy_kube.tar.gz -C /easy_kube .
-   
-   FROM bash
-   
-   COPY --from=tar /easy_kube.tar.gz /easy_kube.tar.gz
-   ```
+    ``` Dockerfile
+    FROM golang:alpine AS dependency
+
+    ENV CGO_ENABLED=0
+    ENV LDFLAGS='-extldflags -static -s -w'
+    RUN go install -ldflags "${LDFLAGS}" github.com/ahmetb/kubectx/cmd/kubens@v0.9.4 && \
+        go install -ldflags "${LDFLAGS}" github.com/ahmetb/kubectx/cmd/kubectx@v0.9.4 && \
+        go install -ldflags "${LDFLAGS}" github.com/junegunn/fzf@0.34.0
+
+    FROM alpine AS tar
+
+    RUN apk add --no-cache tar
+    COPY --from=dependency /go/bin /easy_kube/bin
+    ADD easy_k /easy_kube/easy_k
+    ADD init.sh /easy_kube/init.sh
+    RUN tar -zcf /easy_kube.tar.gz --owner=0 --group=0 -C /easy_kube .
+
+    FROM bash
+
+    COPY --from=tar /easy_kube.tar.gz /easy_kube.tar.gz
+    ```
