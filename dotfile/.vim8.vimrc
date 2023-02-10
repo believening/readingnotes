@@ -87,8 +87,14 @@ nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <leader>rn <Plug>(coc-rename)
-" Add `:Format` command to format current buffer.
-command! -nargs=0 Format :call CocActionAsync('format')
+" Add `:Format` command to format current buffer
+command! -nargs=0 Format :call CocActionAsync('format') <bar> w
+" format go
+autocmd BufWritePre *.go silent call CocAction('runCommand', 'editor.action.organizeImport')
+" confirms completion
+inoremap <expr> <cr> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"
+" select the first completion item and confirm the completion when no item has been selected
+inoremap <silent><expr> <cr> coc#pum#visible() ? coc#_select_confirm() : "\<C-g>u\<CR>"
 
 " ack.vim
 " upstream: https://github.com/mileszs/ack.vim
