@@ -78,3 +78,34 @@ k() {
 
     COPY --from=tar /easy_kube.tar.gz /easy_kube.tar.gz
     ```
+
+4. init.sh
+   
+   ``` shell
+   #!/bin/bash
+   
+   if [ ! -d $HOME/bin ]; then
+     mkdir $HOME/bin
+   fi
+
+   for binary in kubectx kubens fzf; do
+     if ! which ${binary} >/dev/null 2>&1; then
+       cp ./bin/${binary} $HOME/bin/
+     fi
+   done
+
+   if [[ -n "${BASH_VERSION}" ]]; then
+     sed -i '/source $HOME\/\.easy_k\.profile/d' $HOME/.bash_profile $HOME/.profile >/dev/null 2>&1
+     cp ./easy_k $HOME/.easy_k.profile
+     if [ -e $HOME/.bash_profile ]; then
+       echo 'source $HOME/.easy_k.profile' >> $HOME/.bash_profile
+     else
+       echo 'source $HOME/.easy_k.profile' >> $HOME/.profile
+     fi
+   elif [[ -n "${ZSH_VERSION}" ]]; then
+     sed -i '/source $HOME\/\.easy_k\.profile/d' $HOME/.zshrc $HOME/.profile >/dev/null 2>&1
+     echo 'source $HOME/.easy_k.profile' >> $HOME/.zshrc
+   fi
+
+   source $HOME/.easy_k.profile
+   ```
