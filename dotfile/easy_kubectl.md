@@ -79,7 +79,7 @@ k() {
     COPY --from=tar /easy_kube.tar.gz /easy_kube.tar.gz
     ```
 
-4. init.sh
+5. init.sh
    
    ``` shell
    #!/bin/bash

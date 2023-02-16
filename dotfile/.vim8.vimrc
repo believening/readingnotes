@@ -88,8 +88,8 @@ nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <leader>rn <Plug>(coc-rename)
 " Add `:Format` command to format current buffer
-command! -nargs=0 Format :call CocActionAsync('format') <bar> w
-" format go
+command! -nargs=0 Format :call CocActionAsync('runCommand', 'editor.action.formatDocument') <bar> w
+" autoimport for go
 autocmd BufWritePre *.go silent call CocAction('runCommand', 'editor.action.organizeImport')
 " confirms completion
 inoremap <expr> <cr> coc#pum#visible() ? coc#pum#confirm() : "\<CR>"

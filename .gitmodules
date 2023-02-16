@@ -1,0 +1,21 @@
+[submodule "dotfile/.vim/pack/plugins/start/ack.vim"]
+	path = dotfile/.vim/pack/plugins/start/ack.vim
+	url = https://github.com/mileszs/ack.vim.git
+[submodule "dotfile/.vim/pack/plugins/start/coc.nvim"]
+	path = dotfile/.vim/pack/plugins/start/coc.nvim
+	url = https://github.com/neoclide/coc.nvim.git
+[submodule "dotfile/.vim/pack/plugins/start/fzf"]
+	path = dotfile/.vim/pack/plugins/start/fzf
+	url = https://github.com/junegunn/fzf.git
+[submodule "dotfile/.vim/pack/plugins/start/vim-fugitive"]
+	path = dotfile/.vim/pack/plugins/start/vim-fugitive
+	url = https://github.com/tpope/vim-fugitive.git
+[submodule "dotfile/.vim/pack/plugins/start/fzf.vim"]
+	path = dotfile/.vim/pack/plugins/start/fzf.vim
+	url = https://github.com/junegunn/fzf.vim.git
+[submodule "dotfile/.vim/pack/plugins/start/gruvbox"]
+	path = dotfile/.vim/pack/plugins/start/gruvbox
+	url = https://github.com/morhetz/gruvbox.git
+[submodule "dotfile/.vim/pack/plugins/start/nerdtree"]
+	path = dotfile/.vim/pack/plugins/start/nerdtree
+	url = https://github.com/preservim/nerdtree.git
