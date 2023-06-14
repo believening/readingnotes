@@ -64,3 +64,14 @@
    # merge-patch
    curl --cert cert --key key -k  -XPATCH  -H "Content-Type: application/merge-patch+json" -H "Accept: application/json" --data '{"status":{...}}' 'https://{apiserver}:6443/apis/{group}/{version}/namespaces/{ns}/{resources}/{name}/status'
    ```
+
+## yq
+
+1. 多 doc 文本选择替换
+   ```
+   yq eval 'select(.kind == "Service") |= ((.metadata.labels.deployment = .metadata.labels.app) | del(.metadata.labels.app))' -i $input_file
+   ```
+2. 借用 style 实现 int 转字符
+   ```
+   yq eval 'select(.kind == "Deployment") |= ((.metadata.annotations.replicas = .spec.replicas) | (.metadata.annotations.replicas style="double"))' -i $input_file
+   ```
