@@ -77,7 +77,6 @@ let NERDTreeShowHidden=0
 let NERDTreeIgnore = ['\.pyc$', '__pycache__']
 let g:NERDTreeWinSize=35
 map <leader>nn :NERDTreeToggle<cr>
-map <leader>nb :NERDTreeFromBookmark<Space>
 map <leader>nf :NERDTreeFind<cr>
 
 " coc.nvim
@@ -87,8 +86,11 @@ nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 nmap <leader>rn <Plug>(coc-rename)
+nmap <leader>e :CocOutline<cr>
 " Add `:Format` command to format current buffer
-command! -nargs=0 Format :call CocActionAsync('runCommand', 'editor.action.formatDocument') <bar> w
+"command! -nargs=0 Format :call CocActionAsync('runCommand', 'editor.action.formatDocument') <bar> w
+" Add `:Format` command to format current buffer
+command! -nargs=0 Format :call CocActionAsync('format')
 " autoimport for go
 autocmd BufWritePre *.go silent call CocAction('runCommand', 'editor.action.organizeImport')
 " confirms completion
