@@ -1,0 +1,19 @@
+// 将整数分解成多个 10 以内自然数的乘积，并将其排列组合成最小的自然数
+func cal(in int) int {
+	if in > 0 && in <= 9 {
+		return in
+	}
+	ret := -1
+	for i := 9; i >= 2; i-- {
+		if in%i == 0 {
+			inRet := cal(in / i)
+			if inRet >= 0 {
+				cur := inRet*10 + i
+				if ret < 0 || cur < ret {
+					ret = cur
+				}
+			}
+		}
+	}
+	return ret
+}
