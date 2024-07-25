@@ -151,10 +151,62 @@ require("lazy").setup({
 
                     vim.keymap.set("n", "<Leader>rn", vim.lsp.buf.rename,
                                    bufopts("lsp: rename"))
-
                 end
-                lspconfig.gopls.setup({
+                lspconfig.pyright.setup({
                     on_attach = on_attach,
+                    settings = {
+                        pyright = {disableOrganizeImports = true},
+                        python = {analysis = {ignore = {'*'}}}
+                    }
+                })
+                lspconfig.ruff.setup({
+                    on_attach = function(client, bufnr)
+                        on_attach(client, bufnr)
+                        if client.name == 'ruff' then
+                            client.server_capabilities.hoverProvider = false
+                        end
+                        vim.api.nvim_create_autocmd("BufWritePre", {
+                            pattern = "*.py",
+                            callback = function()
+                                vim.lsp.buf.format({
+                                    async = false,
+                                    bufnr = bufnr,
+                                    id = client.id
+                                })
+                            end
+                        })
+                    end
+                })
+                lspconfig.gopls.setup({
+                    on_attach = function(client, bufnr)
+                        on_attach(client, bufnr)
+                        vim.api.nvim_create_autocmd("BufWritePre", {
+                            pattern = {"*.go", "go.mod", "go.work"},
+                            callback = function()
+                                local params = vim.lsp.util.make_range_params()
+                                params.context = {
+                                    only = {"source.organizeImports"}
+                                }
+                                local result =
+                                    vim.lsp.buf_request_sync(0,
+                                                             "textDocument/codeAction",
+                                                             params)
+                                for cid, res in pairs(result or {}) do
+                                    for _, r in pairs(res.result or {}) do
+                                        if r.edit then
+                                            local enc = (vim.lsp
+                                                            .get_client_by_id(
+                                                            cid) or {}).offset_encoding or
+                                                            "utf-16"
+                                            vim.lsp.util.apply_workspace_edit(
+                                                r.edit, enc)
+                                        end
+                                    end
+                                end
+                                vim.lsp.buf.format({async = false})
+                            end
+                        })
+                    end,
                     settings = {
                         gopls = {
                             analyses = {unusedparams = true},
@@ -238,36 +290,6 @@ vim.keymap.set("n", "<Leader>nf", ":NvimTreeFindFile<CR>", {
 })
 -- a/d/r/c/p: create/delete/rename/copy/paste a node
 -- <C-x>/<C-v>: horizontal split/vertical split
-
--------------------
--- auto fromat go
--------------------
-vim.api.nvim_create_autocmd("BufWritePre", {
-    pattern = "*.go", -- go files
-    callback = function()
-        local params = vim.lsp.util.make_range_params()
-        params.context = {only = {"source.organizeImports"}}
-        local result = vim.lsp.buf_request_sync(0, "textDocument/codeAction",
-                                                params)
-        for cid, res in pairs(result or {}) do
-            for _, r in pairs(res.result or {}) do
-                if r.edit then
-                    local enc =
-                        (vim.lsp.get_client_by_id(cid) or {}).offset_encoding or
-                            "utf-16"
-                    vim.lsp.util.apply_workspace_edit(r.edit, enc)
-                end
-            end
-        end
-        vim.lsp.buf.format({async = false})
-    end
-})
-
---------
--- lsp 
---------
-vim.keymap.set("n", "<Leader>/", "gcc", {desc = "lsp: toggle comment"})
-vim.keymap.set("v", "<Leader>/", "gc", {desc = "lsp: toggle comment"})
 
 --------------
 -- telescope
