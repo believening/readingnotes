@@ -1,7 +1,10 @@
 // 50000000, base 8.5
-// 1 replace all strconv.ParseFloat to parseFloat  5.4 -> 4.6
-// 2 replace all string([]byte) to [64]byte        4.6 -> 4.4
-// 3 replace all parseFloat to parseInt            4.4 -> 4.0
+//
+// 0 normal                                                                                                 5.46s user 0.39s system 101% cpu 5.771 total
+// 1 replace all strconv.ParseFloat to parseFloat                                         5.4 -> 4.6        4.58s user 0.45s system 99% cpu 5.048 total
+// 2 replace all string([]byte) to []byte and using [64]byte as the key of the map        4.6 -> 4.4        4.41s user 0.30s system 96% cpu 4.876 total
+// 3 replace all parseFloat to parseInt                                                   4.4 -> 4.0        3.97s user 0.38s system 97% cpu 4.468 total
+// 4 using syscall.Mmap to read file                                                      4.0 -> 3.9~4.0    3.92s user 0.07s system 97% cpu 4.106 total
 package main
 
 import (
@@ -15,6 +18,7 @@ import (
 	"runtime/pprof"
 	"sort"
 	"sync"
+	"syscall"
 )
 
 // cal min/max/mean
@@ -30,10 +34,11 @@ func (r result) String() string {
 type cityName struct {
 	start   int
 	content [64]byte
+	name    string
 }
 
 func (c cityName) String() string {
-	return string(c.content[c.start:])
+	return c.name
 }
 
 var cities []cityName
@@ -63,17 +68,18 @@ func run(filePath string) {
 	}
 	defer f.Close()
 
-	// fi, err := f.Stat()
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// data, err := syscall.Mmap(int(f.Fd()), 0, int(fi.Size()), syscall.PROT_READ, syscall.MAP_SHARED)
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// defer syscall.Munmap(data)
-	// bytesReader := bytes.NewReader(data)
-	reader := bufio.NewReader(f)
+	fi, err := f.Stat()
+	if err != nil {
+		log.Fatal(err)
+	}
+	data, err := syscall.Mmap(int(f.Fd()), 0, int(fi.Size()), syscall.PROT_READ, syscall.MAP_SHARED)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer syscall.Munmap(data)
+	bytesReader := bytes.NewReader(data)
+	reader := bufio.NewReader(bytesReader)
+	// reader := bufio.NewReader(f)
 	for {
 		l, _, err := reader.ReadLine()
 		if err != nil {
@@ -191,7 +197,7 @@ func print(outFile string) {
 		outFile = "/dev/stdout"
 	}
 	sort.Slice(cities, func(i, j int) bool {
-		return string(cities[i].content[cities[i].start:]) < string(cities[j].content[cities[j].start:])
+		return cities[i].name < cities[j].name
 	})
 	out, _ := os.OpenFile(os.Args[2], os.O_CREATE|os.O_RDWR, 0644)
 	out.WriteString("{")
@@ -217,6 +223,7 @@ func parseOneline(s []byte) (cityName, int) {
 		start: 64 - seq,
 	}
 	copy(city.content[city.start:], s[:seq])
+	city.name = string(s[:seq])
 	return city, parseInt(s[seq+1:])
 }
 
