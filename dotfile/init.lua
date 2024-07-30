@@ -98,6 +98,11 @@ require("lazy").setup({
             config = function() require("nvim-tree").setup() end
         }, -- nvim-tree
         {
+            "lewis6991/gitsigns.nvim",
+            lazy = false,
+            config = function() require('gitsigns').setup() end
+        }, -- gitsigns
+        {
             "nvim-telescope/telescope.nvim",
             branch = "0.1.x",
             dependencies = {"nvim-lua/plenary.nvim"}
@@ -181,7 +186,7 @@ require("lazy").setup({
                     on_attach = function(client, bufnr)
                         on_attach(client, bufnr)
                         vim.api.nvim_create_autocmd("BufWritePre", {
-                            pattern = {"*.go", "go.mod", "go.work"},
+                            pattern = {"*.go", "go.mod", "go.work"}, -- go files
                             callback = function()
                                 local params = vim.lsp.util.make_range_params()
                                 params.context = {
@@ -265,7 +270,7 @@ require("lazy").setup({
                     matching = {disallow_symbol_nonprefix_matching = false}
                 })
             end
-        }
+        } -- nvim-cmp
     },
     install = {colorscheme = {"tokyonight"}},
     checker = {enabled = false}
