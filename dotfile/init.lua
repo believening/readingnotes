@@ -15,6 +15,12 @@ vim.opt.termguicolors = true
 vim.o.number = true
 vim.o.relativenumber = true
 
+-- color column
+vim.o.colorcolumn = '120'
+
+-- disable mouse
+vim.opt.mouse = ""
+
 -- mappings
 -- 1. map window switching keys
 vim.keymap.set('n', '<C-h>', ':wincmd h<cr>', {silent = true})
@@ -219,6 +225,22 @@ require("lazy").setup({
                             gofumpt = true
                         }
                     }
+                })
+                lspconfig.rust_analyzer.setup({
+                    on_attach = function(client, bufnr)
+                        on_attach(client, bufnr)
+                        vim.lsp.inlay_hint.enable(true, {bufnr = bufnr})
+                        vim.api.nvim_create_autocmd("BufWritePre", {
+                            pattern = "*.rs",
+                            callback = function()
+                                vim.lsp.buf.format({
+                                    async = false,
+                                    bufnr = bufnr,
+                                    id = client.id
+                                })
+                            end
+                        })
+                    end
                 })
             end
         }, -- nvim-lspconfig
