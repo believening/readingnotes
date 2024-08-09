@@ -1,3 +1,4 @@
+# --- disc 02
 def find_digit(k):
     """Returns a function that returns the kth digit of x.
 
@@ -67,6 +68,7 @@ def count_partitions(n, k):
     return count_partitions(n - k, k) + count_partitions(n, k - 1)
 
 
+# --- disc 03
 def multiply(m, n):
     if m == 1:
         return n
@@ -205,3 +207,172 @@ def has_seven(n):
         return True
     else:
         return has_seven(n // 10)
+
+
+# --- disc 04
+def paths(m, n):
+    """Return the number of paths from one corner of an
+    M by N grid to the opposite corner.
+
+    >>> paths(2, 2)
+    2
+    >>> paths(5, 7)
+    210
+    >>> paths(117, 1)
+    1
+    >>> paths(1, 157)
+    1
+    """
+    "*** YOUR CODE HERE ***"
+    # solutions:
+    #
+    # if m == 1 or n == 1:
+    #     return 1
+    # return paths(m - 1, n) + paths(m, n - 1)
+
+    def helper(i, j):
+        if i == m and j == n:
+            return 1
+        if i > m or j > n:
+            return 0
+        return helper(i + 1, j) + helper(i, j + 1)
+
+    return helper(1, 1)
+
+
+def even_weighted_comprehension(s):
+    """
+    >>> x = [1, 2, 3, 4, 5, 6]
+    >>> even_weighted_loop(x)
+    [0, 6, 20]
+    """
+    "*** YOUR CODE HERE ***"
+    return [s[i] * i for i in range(0, len(s), 2)]
+
+
+def tree(root_label, branches=[]):
+    for branch in branches:
+        assert is_tree(branch)
+    return [root_label] + list(branches)
+
+
+def label(tree):
+    return tree[0]
+
+
+def branches(tree):
+    return tree[1:]
+
+
+def is_tree(tree):
+    if type(tree) != list or len(tree) < 1:
+        return False
+    for branch in branches(tree):
+        if not is_tree(branch):
+            return False
+    return True
+
+
+def is_leaf(tree):
+    return not branches(tree)
+
+
+def print_tree(tree):
+    def print_tree_help(t, indent, level):
+        print(indent * level + str(label(t)))
+        if is_leaf(t):
+            return
+        for branch in branches(t):
+            print_tree_help(branch, indent, level + 1)
+
+    print_tree_help(tree, "  ", 0)
+
+
+def has_path(t, p):
+    """Return whether tree t has a path from the root with labels p.
+
+    >>> t2 = tree(5, [tree(6), tree(7)])
+    >>> t1 = tree(3, [tree(4), t2])
+    >>> has_path(t1, [5, 6])        # This path is not from the root of t1
+    False
+    >>> has_path(t2, [5, 6])        # This path is from the root of t2
+    True
+    >>> has_path(t1, [3, 5])        # This path does not go to a leaf, but that's ok
+    True
+    >>> has_path(t1, [3, 5, 6])     # This path goes to a leaf
+    True
+    >>> has_path(t1, [3, 4, 5, 6])  # There is no path with these labels
+    False
+    """
+    if p == [label(t)]:  # when len(p) is 1
+        return True
+    elif label(t) != p[0]:
+        return False
+    # return any([has_path(b, p[1:]) for b in branches(t)])
+    for b in branches(t):
+        if has_path(b, p[1:]):
+            return True
+    return False
+
+
+def find_path(t, x):
+    """
+    >>> t2 = tree(5, [tree(6), tree(7)])
+    >>> t1 = tree(3, [tree(4), t2])
+    >>> find_path(t1, 5)
+    [3, 5]
+    >>> find_path(t1, 4)
+    [3, 4]
+    >>> find_path(t1, 6)
+    [3, 5, 6]
+    >>> find_path(t2, 6)
+    [5, 6]
+    >>> print(find_path(t1, 2))
+    None
+    """
+    if label(t) == x:
+        return [x]
+    for branch in branches(t):
+        path = find_path(branch, x)
+        if path:
+            return [label(t)] + path
+    return None
+
+
+def sprout_leaves(t, leaves):
+    """Sprout new leaves containing the labels in leaves at each leaf of
+    the original tree t and return the resulting tree.
+
+    >>> t1 = tree(1, [tree(2), tree(3)])
+    >>> print_tree(t1)
+    1
+      2
+      3
+    >>> new1 = sprout_leaves(t1, [4, 5])
+    >>> print_tree(new1)
+    1
+      2
+        4
+        5
+      3
+        4
+        5
+
+    >>> t2 = tree(1, [tree(2, [tree(3)])])
+    >>> print_tree(t2)
+    1
+      2
+        3
+    >>> new2 = sprout_leaves(t2, [6, 1, 2])
+    >>> print_tree(new2)
+    1
+      2
+        3
+          6
+          1
+          2
+    """
+    "*** YOUR CODE HERE ***"
+    if is_leaf(t):
+        return tree(label(t), [tree(x) for x in leaves])
+    return tree(label(t), [sprout_leaves(branch, leaves) for branch in branches(t)])
