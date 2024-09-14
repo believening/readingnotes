@@ -12,36 +12,38 @@
 
 2. source 如下 profile 文件
 
-```profile
-if [[ -n "${BASH_VERSION}" ]]; then
-  if ! type __start_kubectl 1>/dev/null 2>&1; then
-    source <(kubectl completion bash)
-  fi
-  if kubectl completion bash | grep "bash completion V2 for kubectl" 1>/dev/null 2>&1; then
-    # 对于 shell function k 来说，需要直接使用 kubectl 获取补全的结果
-    source <(kubectl completion bash | sed '/\s\b__start_kubectl\b\s/s/\bkubectl\b/k/g' | sed 's/_kubectl/_k_kubectl/g' | sed '/requestComp=/s/${words\[0\]}/kubectl/g')
-  else
-    complete -o nospace -F __start_kubectl k
-  fi
-elif [[ -n "${ZSH_VERSION}" ]]; then
-  if ! type _kubectl 1>/dev/null 2>&1; then
-    source <(kubectl completion zsh)
-  fi
-  source <(kubectl completion zsh | sed '/\s\b_kubectl\b\s/s/\bkubectl\b/k/g' | sed 's/_kubectl/_k_kubectl/g' | sed '/requestComp=/s/${words\[1\]}/kubectl/g' )
-fi
-
-k() {
-  if [[ $1 = c ]]; then
-    shift
-    kubectx $@
-  elif [[ $# -eq 0 ]]; then
-    kubens
-  else
-    kubectl $@
-  fi
-}
-
-```
+   ```profile
+   if [[ -n "${BASH_VERSION}" ]]; then
+     if ! type __start_kubectl 1>/dev/null 2>&1; then
+       source <(kubectl completion bash)
+     fi
+     if kubectl completion bash | grep "bash completion V2 for kubectl" 1>/dev/null 2>&1; then
+       # 对于 shell function k 来说，需要直接使用 kubectl 获取补全的结果
+       # 在 macos 中 sed 需要视情况替换成 gsed
+       source <(kubectl completion bash | sed '/\s\b__start_kubectl\b\s/s/\bkubectl\b/k/g' | sed 's/_kubectl/_k_kubectl/g' | sed '/requestComp=/s/${words\[0\]}/kubectl/g')
+     else
+       complete -o nospace -F __start_kubectl k
+     fi
+   elif [[ -n "${ZSH_VERSION}" ]]; then
+     if ! type _kubectl 1>/dev/null 2>&1; then
+       source <(kubectl completion zsh)
+     fi
+     # 在 macos 中 sed 需要视情况替换成 gsed
+     source <(kubectl completion zsh | sed '/\s\b_kubectl\b\s/s/\bkubectl\b/k/g' | sed 's/_kubectl/_k_kubectl/g' | sed '/requestComp=/s/${words\[1\]}/kubectl/g' )
+   fi
+   
+   k() {
+     if [[ $1 = c ]]; then
+       shift
+       kubectx $@
+     elif [[ $# -eq 0 ]]; then
+       kubens
+     else
+       kubectl $@
+     fi
+   }
+   
+   ```
 
 3. 可通过镜像安装集成包
    
@@ -109,3 +111,9 @@ k() {
 
    source $HOME/.easy_k.profile
    ```
+
+
+6. mac os
+   
+  - 可以直接使用 brew 安装 kubectl, kubectx, kubens, fzf 等。
+  - profile 中的 sed 可能需要换成 gsed。
