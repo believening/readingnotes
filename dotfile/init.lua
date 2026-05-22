@@ -73,6 +73,45 @@ end
 vim.opt.rtp:prepend(lazypath)
 
 ---------------
+-- helpers
+---------------
+-- 把"当前选中条目的文件名"写到 Telescope results 浮窗的 border title
+local function with_filename_title(opts)
+    opts = opts or {}
+    local user_attach = opts.attach_mappings
+    opts.attach_mappings = function(prompt_bufnr, map)
+        local action_state = require("telescope.actions.state")
+        local picker = action_state.get_current_picker(prompt_bufnr)
+
+        local function update_title()
+            local entry = picker:get_selection()
+            if not entry then return end
+            local path = entry.filename or entry.path or entry.value
+            if type(path) ~= "string" then return end
+            path = vim.fn.fnamemodify(path, ":.")
+            if entry.lnum then path = path .. ":" .. entry.lnum end
+            pcall(function()
+                picker.results_border:change_title(" " .. path .. " ")
+            end)
+        end
+
+        local group = vim.api.nvim_create_augroup(
+            "TelescopeFnameTitle_" .. prompt_bufnr, { clear = true }
+        )
+        vim.api.nvim_create_autocmd("User", {
+            group = group,
+            pattern = "TelescopePreviewerLoaded",
+            callback = vim.schedule_wrap(update_title),
+        })
+        vim.defer_fn(update_title, 50)
+
+        if user_attach then return user_attach(prompt_bufnr, map) end
+        return true
+    end
+    return opts
+end
+
+---------------
 -- lazy.nvim
 ---------------
 require("lazy").setup({
@@ -113,7 +152,7 @@ require("lazy").setup({
                 }
             })
         end
-    }, -- statusline plugin 
+    }, -- statusline plugin
     {
         "nvim-tree/nvim-tree.lua",
         version = "*",
@@ -140,8 +179,24 @@ require("lazy").setup({
         branch = "0.1.x",
         cmd = "Telescope",
         keys = {
-            "<Leader>f",
-            "<Leader>g"
+            {
+                "<Leader>f",
+                function()
+                    require("telescope.builtin").find_files(with_filename_title({
+                        prompt_title = "Find Files  [^d/^u: preview scroll]",
+                    }))
+                end,
+                desc = "find files",
+            },
+            {
+                "<Leader>g",
+                function()
+                    require("telescope.builtin").live_grep(with_filename_title({
+                        prompt_title = "Live Grep  [^d/^u: preview scroll]",
+                    }))
+                end,
+                desc = "live grep",
+            },
         },
         dependencies = {"nvim-lua/plenary.nvim"},
         config = function()
@@ -199,14 +254,19 @@ require("lazy").setup({
                 vim.keymap.set("n", "gD", vim.lsp.buf.type_definition, bufopts("lsp: go to type definition"))
                 vim.keymap.set("n", "K", vim.lsp.buf.hover, bufopts("lsp: hover"))
                 vim.keymap.set("n", "<Leader>rn", vim.lsp.buf.rename, bufopts("lsp: rename"))
+                vim.keymap.set("n", "<Leader>e", vim.diagnostic.open_float, bufopts("lsp: show diagnostic"))
 
                 -- Telescope-based LSP keymaps (lazy loads telescope)
                 vim.keymap.set("n", "gr", function()
-                    require("telescope.builtin").lsp_references()
+                    require("telescope.builtin").lsp_references(with_filename_title({
+                        prompt_title = "LSP References  [^d/^u: preview scroll]",
+                    }))
                 end, bufopts("lsp: go to references"))
 
                 vim.keymap.set("n", "gi", function()
-                    require("telescope.builtin").lsp_implementations()
+                    require("telescope.builtin").lsp_implementations(with_filename_title({
+                        prompt_title = "LSP Implementations  [^d/^u: preview scroll]",
+                    }))
                 end, bufopts("lsp: go to implementations"))
             end
 
@@ -309,20 +369,6 @@ require("lazy").setup({
                 end
             })
 
-            -- 延迟启用 LSP 服务器，确保在文件打开时才启动
-            vim.api.nvim_create_autocmd("FileType", {
-                pattern = {"python", "go", "rust"},
-                callback = function()
-                    local ft = vim.bo.filetype
-                    if ft == "python" then
-                        vim.lsp.enable("pyright", "ruff")
-                    elseif ft == "go" then
-                        vim.lsp.enable("gopls")
-                    elseif ft == "rust" then
-                        vim.lsp.enable("rust_analyzer")
-                    end
-                end
-            })
         end
     }, -- nvim-lspconfig
     {
@@ -402,6 +448,24 @@ require("lazy").setup({
 })
 
 --------------
+-- LSP autocmd - 延迟启用 LSP 服务器
+-- 使用 BufReadPre 而不是 FileType，确保在文件加载时就启用
+--------------
+vim.api.nvim_create_autocmd({"BufReadPre", "BufNewFile"}, {
+    pattern = {"*.py", "*.go", "*.rs"},
+    callback = function(ev)
+        local ext = vim.fn.expand("%:e")
+        if ext == "py" then
+            vim.lsp.enable("pyright", "ruff")
+        elseif ext == "go" then
+            vim.lsp.enable("gopls")
+        elseif ext == "rs" then
+            vim.lsp.enable("rust_analyzer")
+        end
+    end
+})
+
+--------------
 -- nvim-tree
 --------------
 vim.keymap.set("n", "<Leader>nn", ":NvimTreeToggle<CR>", {
@@ -418,13 +482,3 @@ vim.keymap.set("n", "<Leader>nf", ":NvimTreeFindFile<CR>", {
 })
 -- a/d/r/c/p: create/delete/rename/copy/paste a node
 -- <C-x>/<C-v>: horizontal split/vertical split
-
---------------
--- telescope
---------------
-vim.keymap.set("n", "<Leader>f", ":Telescope find_files<CR>", {
-    desc = "find files"
-})
-vim.keymap.set("n", "<Leader>g", ":Telescope live_grep<CR>", {
-    desc = "live grep"
-})
