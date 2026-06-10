@@ -13,14 +13,27 @@
 2. source 如下 profile 文件
 
    ```profile
+   # 每个 shell session 独占一份 kubeconfig 副本，避免 kubectx/kubens 改动 ~/.kube/config 影响其它会话。
+   # 子 shell 通过 EASY_K_SESSION_CONFIG 继承父 shell 的隔离副本；新顶层 shell 各自生成新副本。
+   if [[ -z "${EASY_K_SESSION_CONFIG}" ]]; then
+     _easy_k_src="${KUBECONFIG:-$HOME/.kube/config}"
+     if [[ -r "${_easy_k_src}" ]]; then
+       EASY_K_SESSION_CONFIG="$(mktemp -t kubeconfig.XXXXXX)"
+       cp "${_easy_k_src}" "${EASY_K_SESSION_CONFIG}"
+       export KUBECONFIG="${EASY_K_SESSION_CONFIG}"
+       export EASY_K_SESSION_CONFIG
+       trap 'rm -f "${EASY_K_SESSION_CONFIG}"' EXIT
+     fi
+     unset _easy_k_src
+   fi
+   
    if [[ -n "${BASH_VERSION}" ]]; then
      if ! type __start_kubectl 1>/dev/null 2>&1; then
        source <(kubectl completion bash)
      fi
      if kubectl completion bash | grep "bash completion V2 for kubectl" 1>/dev/null 2>&1; then
        # 对于 shell function k 来说，需要直接使用 kubectl 获取补全的结果
-       # 在 macos 中 sed 需要视情况替换成 gsed
-       source <(kubectl completion bash | sed '/\s\b__start_kubectl\b\s/s/\bkubectl\b/k/g' | sed 's/_kubectl/_k_kubectl/g' | sed '/requestComp=/s/${words\[0\]}/kubectl/g')
+       source <(kubectl completion bash | gsed '/\s\b__start_kubectl\b\s/s/\bkubectl\b/k/g' | gsed 's/_kubectl/_k_kubectl/g' | gsed '/requestComp=/s/${words\[0\]}/kubectl/g')
      else
        complete -o nospace -F __start_kubectl k
      fi
@@ -28,8 +41,7 @@
      if ! type _kubectl 1>/dev/null 2>&1; then
        source <(kubectl completion zsh)
      fi
-     # 在 macos 中 sed 需要视情况替换成 gsed
-     source <(kubectl completion zsh | sed '/\s\b_kubectl\b\s/s/\bkubectl\b/k/g' | sed 's/_kubectl/_k_kubectl/g' | sed '/requestComp=/s/${words\[1\]}/kubectl/g' )
+     source <(kubectl completion zsh | gsed '/\s\b_kubectl\b\s/s/\bkubectl\b/k/g' | gsed 's/_kubectl/_k_kubectl/g' | gsed '/requestComp=/s/${words\[1\]}/kubectl/g' )
    fi
    
    k() {
